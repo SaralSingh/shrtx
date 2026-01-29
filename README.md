@@ -272,5 +272,5 @@ Exceed limits → receive `429 Too Many Requests`.
 
 ## 👤 Author
 
-**Hyper**  
+**Saral Singh**  
 Backend-focused developer building real-world API systems.
