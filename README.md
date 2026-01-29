@@ -1,59 +1,276 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Shrtx — API-First URL Shortener
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Shrtx** is an **API-first URL shortening service** built with **Laravel**, designed to be:
 
-## About Laravel
+* Simple to integrate
+* Secure by default
+* Optimized for high-frequency redirect traffic
+* Deterministic and collision-free
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+It follows a **production-oriented backend design** with controlled creation and ultra-fast public redirects.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+> **Design Version:** `Shrtx-AFCA v1`  
+> (API-First Controlled Access)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🧠 Design Philosophy
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Shrtx is built with real backend system thinking:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* ✅ API-first (no frontend dependency)
+* ✅ Deterministic short-code generation
+* ✅ Public redirects, controlled creation
+* ✅ Read-heavy optimization
+* ✅ Clean separation of concerns
+* ✅ No randomness, no retry loops
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## ✨ Features
 
-### Premium Partners
+| Feature           | Description                              |
+| ----------------- | ---------------------------------------- |
+| 🔗 URL Shortening | Create short URLs via API                |
+| ⚡ Fast Redirects  | Public, highly optimized redirects       |
+| 🧮 Base62 Codes   | Deterministic ID → Base62 encoding       |
+| 🚫 Collision-Free | Zero risk of duplicate short codes       |
+| 🔒 Rate Limited   | Anonymous and token-based throttling     |
+| 🔑 Sanctum Ready  | Token authentication for trusted clients |
+| 📊 Click Tracking | Track hits per short URL                 |
+| ⏳ Expiration      | Optional expiry for links                |
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🏗 Architecture Overview
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Creation Flow
 
-## Code of Conduct
+`Client
+  ↓
+POST /api/shorten  (rate limited)
+  ↓
+Controller (thin)
+  ↓
+Service Layer
+  ↓
+Database (MySQL)
+  ↓
+Base62 Encoder
+`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Redirect Flow
 
-## Security Vulnerabilities
+`GET /{shortCode}
+  ↓
+Indexed DB lookup
+  ↓
+302 Redirect
+`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🔑 Short Code Strategy (Core Idea)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Shrtx uses a **deterministic ID-based approach**:
+
+`short_code = Base62(database_id)
+`
+
+### Why this is powerful
+
+* No randomness
+* No collisions
+* No retries
+* Predictable at scale
+* Extremely easy to debug
+
+| DB ID | Short Code |
+| ----- | ---------- |
+| 1     | 1          |
+| 10    | a          |
+| 62    | 10         |
+| 125   | cb         |
+
+This behavior is **intentional and correct**.
+
+---
+
+## 🌐 API Endpoints
+
+### ➕ Create Short URL (Anonymous — Limited)
+
+**POST** `/api/shorten`
+
+**Headers**
+
+`Content-Type: application/json
+Accept: application/json
+`
+
+**Body**
+
+`{
+  "url": "https://example.com"
+}
+`
+
+**Response — 201 Created**
+
+`{
+  "short_url": "http://127.0.0.1:8000/1",
+  "code": "1",
+  "original_url": "https://example.com"
+}
+`
+
+---
+
+### ➕ Create Short URL (Authenticated — Extended)
+
+**POST** `/api/shorten`
+
+`Authorization: Bearer <API_TOKEN>
+`
+
+* Uses Laravel Sanctum
+* Higher rate limits
+* For trusted clients / services
+
+---
+
+### 🔁 Redirect (Public)
+
+**GET** `/{shortCode}`
+
+Example:
+
+`GET /1
+`
+
+* No authentication
+* No token
+* Instant 302 redirect
+
+---
+
+## ⏱ Rate Limiting
+
+Shrtx uses **named rate limiters**.
+
+| Access Type   | Limit                              |
+| ------------- | ---------------------------------- |
+| Anonymous     | 10 requests / minute (IP-based)    |
+| Authenticated | 60 requests / minute (token-based) |
+
+If exceeded:
+
+`429 Too Many Requests
+`
+
+---
+
+## 🗄 Database Schema
+
+### `short_urls` table
+
+| Column        | Type                 | Purpose           |
+| ------------- | -------------------- | ----------------- |
+| id            | BIGINT               | Primary key       |
+| original\_url | TEXT                 | Long URL          |
+| short\_code   | VARCHAR(10)          | Base62 encoded ID |
+| clicks        | BIGINT               | Redirect count    |
+| expires\_at   | TIMESTAMP (nullable) | Optional expiry   |
+| created\_at   | TIMESTAMP            | Created time      |
+| updated\_at   | TIMESTAMP            | Updated time      |
+
+* `short_code` is **unique & indexed**
+* Schema supports deterministic generation
+
+---
+
+## 🔐 Security Considerations
+
+* Only `http` and `https` URLs allowed
+* Tokens never exposed to browsers
+* API protected via rate limiting
+* Redirects are public **by design**
+* Strict input validation at service layer
+
+---
+
+## ⚠️ Intentional Design Decisions
+
+### Same long URL → Multiple short URLs
+
+Shrtx is **non-idempotent** by design.
+
+Each request:
+
+* Creates a new short URL
+* Enables independent analytics
+* Avoids extra DB lookups
+* Keeps API semantics clean
+
+> This is **by design**, not a bug.
+
+---
+
+## 🧪 Testing Guide
+
+### API Testing
+
+Use Postman / curl:
+
+`POST /api/shorten
+`
+
+Send JSON body.
+
+### Redirect Testing
+
+Open short URL in browser.
+
+### Throttle Testing
+
+Exceed limits → receive `429 Too Many Requests`.
+
+---
+
+## 🚀 Tech Stack
+
+* Laravel 12
+* PHP 8.2
+* MySQL
+* Laravel Sanctum
+* Base62 Encoding
+
+---
+
+## 🛣 Future Enhancements
+
+* Redis caching for redirects
+* Async click tracking
+* Custom short codes
+* Optional deduplication flag
+* Token management dashboard
+* Analytics API
+
+---
+
+## 📌 Project Status
+
+| Status     | State              |
+| ---------- | ------------------ |
+| Core Logic | ✅ Complete         |
+| API        | ✅ Tested           |
+| Redirect   | ✅ Working          |
+| Throttling | ✅ Verified         |
+| Design     | ✅ Production-ready |
+
+---
+
+## 👤 Author
+
+**Hyper**  
+Backend-focused developer building real-world API systems.
